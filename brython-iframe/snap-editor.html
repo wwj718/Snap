@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Snap! to Code</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <script src="../src/morphic.js"></script>
+    <script src="../src/symbols.js"></script>
+    <script src="../src/widgets.js"></script>
+    <script src="../src/blocks.js"></script>
+    <script src="../src/threads.js"></script>
+    <script src="../src/objects.js"></script>
+    <script src="../src/scenes.js"></script>
+    <script src="../src/gui.js"></script>
+    <script src="../src/paint.js"></script>
+    <script src="../src/lists.js"></script>
+    <script src="../src/byob.js"></script>
+    <script src="../src/tables.js"></script>
+    <script src="../src/sketch.js"></script>
+    <script src="../src/video.js"></script>
+    <script src="../src/maps.js"></script>
+    <script src="../src/extensions.js?"></script>
+    <script src="../src/xml.js"></script>
+    <script src="../src/store.js"></script>
+    <script src="../src/locale.js"></script>
+    <script src="../src/cloud.js"></script>
+    <script src="../src/api.js"></script>
+    <script src="../src/sha512.js"></script>
+    <script src="../src/FileSaver.min.js"></script>
+
+    <script>
+      var world; // 这样才能被外层访问
+      window.onload = function () {
+        var ide = new IDE_Morph({
+            path: "../",
+            load: "transpile.xml",
+            design: "flat",
+            border: 1,
+            hideControls: true,
+            hideCategories: true,
+            noSprites: true,
+            // noImports: true,
+            noOwnBlocks: true,
+            noRingify: true,
+            noUserSettings: true,
+          }),
+          buttons = document.querySelectorAll('input[name="pl"]'),
+          code = document.getElementById("code"),
+          loop = () => {
+            requestAnimationFrame(loop);
+            world.doOneCycle();
+          };
+        world = new WorldMorph(document.getElementById("world"), false);
+        ide.openIn(world);
+        ide.addMessageListener("update", (txt) => (code.value = txt));
+        code.onmouseup = function () {
+          var scripts = ide.currentSprite.scripts,
+            ln = (n) => this.value.substr(0, n).split("\n").length;
+          scripts.unflash();
+          if (this.selectionStart < this.selectionEnd) {
+            scripts.flashLOC(ln(this.selectionStart), ln(this.selectionEnd));
+          }
+        };
+        requestAnimationFrame(loop);
+      };
+    </script>
+  </head>
+
+  <body>
+    <canvas id="world" tabindex="1" width="400" height="300"></canvas>
+    <textarea id="code" rows="19" cols="25" style="resize: none"></textarea>
+    <br />
+  </body>
+</html>
