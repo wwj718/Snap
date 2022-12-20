@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Snap! to Code</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+
+    <script
+      type="text/javascript"
+      src="https://cdn.jsdelivr.net/npm/brython@3.10.3/brython.min.js"
+    ></script>
+    <script
+      type="text/javascript"
+      src="https://cdn.jsdelivr.net/npm/brython@3.10.3/brython_stdlib.js"
+    ></script>
+
+    <script type="text/python">
+      import sys
+      import time
+      import binascii
+
+      import tb as traceback
+      import javascript
+      from browser import document
+      from browser import document as doc, window, alert, bind, html
+      import browser.widgets.dialog as dialog
+
+      if hasattr(window, 'localStorage'):
+          from browser.local_storage import storage
+      else:
+          storage = None
+
+      # run a script, in global namespace if in_globals is True
+      def runCode(*args):
+          global output
+          # doc["console"].value = ''
+          src = doc.getElementsByTagName("iframe")[0].contentWindow.document.getElementById('code').value
+          # print(src)
+          if storage is not None:
+             storage["py_src"] = src
+
+          t0 = time.perf_counter()
+          try:
+              # ns = {'__name__':'__main__'}
+              exec(src, globals())
+              state = 1
+          except Exception as exc:
+              traceback.print_exc(file=sys.stderr)
+              state = 0
+          sys.stdout.flush()
+          output = doc["console"].value
+
+          print('<completed in %6.2f ms>' % ((time.perf_counter() - t0) * 1000.0))
+          return state
+
+      class cOutput:
+          encoding = 'utf-8'
+
+          def __init__(self):
+              self.cons = doc["console"]
+              self.buf = ''
+
+          def write(self, data):
+              self.buf += str(data)
+
+          def flush(self):
+              self.cons.value += self.buf
+              self.buf = ''
+
+          def __len__(self):
+              return len(self.buf)
+
+      if doc["console"]:
+          cOut = cOutput()
+          sys.stdout = cOut
+          sys.stderr = cOut
+
+      doc['run'].bind('click',lambda *args: runCode())
+
+      # init turtle
+      import turtle
+      turtle.set_defaults(turtle_canvas_wrapper = doc['turtle-div'])
+    
+    </script>
+  </head>
+  <script>
+    window.onload = function () {
+      brython({ debug: 1 });
+      var ide = document.getElementsByTagName("iframe")[0].contentWindow.world.children[0];
+      var buttons = document.querySelectorAll('input[name="pl"]');
+      buttons.forEach((bt) =>
+        bt.addEventListener("click", () => ide.broadcast(bt.value))
+      );
+    };
+  </script>
+
+  <body>
+    <!--onload已经用了-->
+    <h1>Snap! to Code</h1>
+    <p>积木到文本代码的翻译机制也在图形环境里完成 ！</p>
+    <div>
+        <iframe
+        src="/brython-iframe/snap-editor.html"
+        width="700"
+        height="350"
+        style="border:none;"
+        >
+        </iframe>
+        <span style="border:1px solid green; float:right" ><div id="turtle-div"></div></span>
+    </div>
+    
+    <br />
+    <input type="radio" id="py" name="pl" value="Python" checked />
+    <label for="py">Python</label>
+    <!--修改xml 要在ide里运行一次python消息，不然自定义积木还是之前的 ， 切换到sprite空白精灵-->
+    <input type="radio" id="js" name="pl" value="JavaScript" />
+    <label for="js">JavaScript</label>
+    <input type="radio" id="st" name="pl" value="Smalltalk" />
+    <label for="st">Smalltalk</label>
+    <input type="radio" id="c" name="pl" value="C" />
+    <label for="c">C</label>
+    <button id="run">▶ Run Python</button>
+    <textarea rows="4" id="console" autocomplete="off"></textarea>
+    
+  </body>
+</html>
