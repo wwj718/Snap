@@ -107,19 +107,22 @@
         </iframe>
         <span style="border:1px solid green; float:right" ><div id="turtle-div"></div></span>
     </div>
-    
-    <br />
-    <input type="radio" id="py" name="pl" value="Python" checked />
-    <label for="py">Python</label>
-    <!--修改xml 要在ide里运行一次python消息，不然自定义积木还是之前的 ， 切换到sprite空白精灵-->
-    <input type="radio" id="js" name="pl" value="JavaScript" />
-    <label for="js">JavaScript</label>
-    <input type="radio" id="st" name="pl" value="Smalltalk" />
-    <label for="st">Smalltalk</label>
-    <input type="radio" id="c" name="pl" value="C" />
-    <label for="c">C</label>
-    <button id="run">▶ Run Python</button>
-    <textarea rows="4" id="console" autocomplete="off"></textarea>
-    
+
+    <div>
+      <input type="radio" id="py" name="pl" value="Python" checked />
+      <label for="py">Python</label>
+      <!--修改xml 要在ide里运行一次python消息，不然自定义积木还是之前的 ， 切换到sprite空白精灵-->
+      <input type="radio" id="js" name="pl" value="JavaScript" />
+      <label for="js">JavaScript</label>
+      <input type="radio" id="st" name="pl" value="Smalltalk" />
+      <label for="st">Smalltalk</label>
+      <input type="radio" id="c" name="pl" value="C" />
+      <label for="c">C</label>
+      <button id="run">▶ Run Python</button>
+    </div>
+
+    <div>
+      <textarea rows="20" cols="60" id="console" autocomplete="off" style="margin-top: 10px;margin-bottom: 100px;"></textarea>
+    </div>
   </body>
 </html>
