@@ -229,7 +229,7 @@ SnapTranslator.dict.zh_CN = {
 
 
     'move %n steps':
-        '移动 %n 歩',
+        '移动 %n 步',
     'turn %clockwise %n degrees':
         '旋转 %clockwise %n 度',
     'turn %counterclockwise %n degrees':
