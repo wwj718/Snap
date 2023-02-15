@@ -1140,6 +1140,47 @@ IDE_Morph.prototype.createControlBar = function () {
     steppingButton = button;
     this.controlBar.add(steppingButton);
     this.controlBar.steppingButton = steppingButton; // for refreshing
+    
+    // adapterButton
+    button = new PushButtonMorph(
+        this,
+        () => {console.log("adapterButton")},
+        new SymbolMorph('circleSolid', 14)
+        // '🔥'
+    );
+    button.corner = 12;
+    button.color = colors[0];
+    button.highlightColor = colors[1];
+    button.pressColor = colors[2];
+    button.labelMinExtent = new Point(36, 18);
+    button.padding = 0;
+    button.labelShadowOffset = new Point(-1, -1);
+    button.labelShadowColor = colors[1];
+    button.fps = 4;
+    button.isActive = false;
+
+    button.step = function () {
+        if (window.eim_client){
+            // 在全局环境中查询, 基于查询而不是回调
+            if (eim_client.adapter_base_client.connected){
+                this.labelColor = new Color(0, 200, 0);
+                this.hint = 'Adapter status: online';
+            }
+            else {
+                this.labelColor = new Color(128, 128, 128);
+                this.hint = 'Adapter status: offline';
+            }
+        }
+        // this.controlBar.adapterButton.createLabel();
+        this.fixLayout();
+        this.rerender();
+    };
+
+    button.contrast = this.buttonContrast;
+    button.fixLayout();
+    adapterButton = button;
+    this.controlBar.add(adapterButton);
+    this.controlBar.adapterButton = adapterButton; // for refreshing
 
     // stopButton
     button = new ToggleButtonMorph(
@@ -1259,6 +1300,7 @@ IDE_Morph.prototype.createControlBar = function () {
     startButton = button;
     this.controlBar.add(startButton);
     this.controlBar.startButton = startButton;
+    
 
     // steppingSlider
     slider = new SliderMorph(
@@ -1388,7 +1430,9 @@ IDE_Morph.prototype.createControlBar = function () {
 
         steppingButton.setCenter(myself.controlBar.center());
         steppingButton.setRight(slider.left() - padding);
-
+        // 左移
+        adapterButton.setCenter(myself.controlBar.center());
+        adapterButton.setRight(steppingButton.left() - padding);
         settingsButton.setCenter(myself.controlBar.center());
         settingsButton.setLeft(this.left());
 
