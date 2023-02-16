@@ -47,4 +47,5 @@ signada.xml	Signada (Network remote control)	Interact with MicroBlocks devices v
 ~	~
 Adapter_EIM_lib.xml	CodeLab Adapter EIM	Everything is a message.
 Elite_AI_Training.xml	Elite AI Training Platform	此扩展可以获取到英荔AI训练平台中机器学习模型执行的结果，将其作为触发条件进行编程创作。
+Kano_Wand.xml	Kano Wand	魔杖内置高精度运动传感器，此扩展让你可以把各种运动轨迹作为触发条件去控制其他对象。
 microblocks_messaging_library.xml	MicroBlocks (MicroBlocks and Snap! Communication with Messages)	Snap! and MicroBlocks can exchange string messages over a USB cable using WebSerial. Messages are a flexible communciation mechanism that can be used in many ways.
