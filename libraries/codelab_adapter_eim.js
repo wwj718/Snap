@@ -26,7 +26,7 @@ class EIMClient {
         this.adapter_node_content_hat = msg.message.payload.content; // todo topic
         this.adapter_node_content_reporter = msg.message.payload.content;
         this.node_id = msg.message.payload.node_id;
-        this.adapter_node_time = Date.now(); // for Snap!
+        this.adapter_msg_time = Date.now(); // for Snap!
         this.adapter_msg = JSON.stringify(msg); // todo primitive get_adapter_msg
     }
 
