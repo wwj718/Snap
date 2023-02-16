@@ -731,7 +731,7 @@ IDE_Morph.prototype.openIn = function (world) {
     // configure optional settings
     this.applyConfigurations();
 
-    this.warnAboutDev();
+    // this.warnAboutDev();
     return this;
 };
 
