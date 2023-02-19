@@ -26,8 +26,28 @@ class EIMClient {
         this.adapter_node_content_hat = msg.message.payload.content; // todo topic
         this.adapter_node_content_reporter = msg.message.payload.content;
         this.node_id = msg.message.payload.node_id;
-        this.adapter_msg_time = Date.now(); // for Snap!
-        this.adapter_msg = JSON.stringify(msg); // todo primitive get_adapter_msg
+        msg.timestamp = Date.now();
+        this.pluginMessages[msg.message.payload.node_id] = msg;
+    }
+
+    notify_callback(msg){
+        // 接受硬件设备的信息, 断开...
+        let timestamp = Date.now();
+        let node_id;
+        console.log('notify_callback ->', msg);
+        if (msg.message.includes('停止')){
+            node_id = msg.message.split(' ')[1]
+            // NTFY
+            this.pluginNotify[node_id] = {"timestamp":timestamp, "message": msg.message}
+        }
+        if (msg.message.includes('已断开')){
+            node_id = msg.message.split(' ')[0]
+            // NTFY
+            this.pluginNotify[node_id] = {"timestamp":timestamp, "message": msg.message}
+        }
+        if (msg.message === `micro:bit 连接异常`) {
+            this.pluginNotify['eim/extension_usb_microbit'] = {"timestamp":timestamp, "message": msg.message}
+        }
     }
 
     constructor (node_id, help_url, runtime) {
@@ -48,7 +68,7 @@ class EIMClient {
             this.onAdapterPluginMessage.bind(this), // onAdapterPluginMessage,
             this.update_nodes_status.bind(this), // update_nodes_status,
             this.node_statu_change_callback.bind(this), // node_statu_change_callback,
-            null, // notify_callback,
+            this.notify_callback.bind(this), // notify_callback,
             null, // error_message_callback,
             null, // update_adapter_status
             100, // SendRateMax // EIM没有可以发送100条消息
@@ -59,9 +79,8 @@ class EIMClient {
         this.adapter_node_content_hat = 0 // todo topic
         this.adapter_node_content_reporter = 0;
         this.node_id = 0;
-        this.adapter_node_time = Date.now(); // for Snap!
-        this.adapter_msg = JSON.stringify({});
-
+        this.pluginMessages = {}; // 所有插件的消息池，不需要每个插件建立一个websocket， 每条消息附着时间
+        this.pluginNotify = {};
     }
 
     emit_with_messageid (NODE_ID, content) {

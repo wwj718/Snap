@@ -52,3 +52,5 @@ microblocks_messaging_library.xml	MicroBlocks (MicroBlocks and Snap! Communicati
 HCI_lib.xml	HCI	此扩展可以让你模拟电脑键盘和鼠标的输入，只要在电脑前用双手可以完成的动作，此扩展都可以替你完成。
 Kano_Wand.xml	Kano Wand	魔杖内置高精度运动传感器，此扩展让你可以把各种运动轨迹作为触发条件去控制其他对象。
 AlphaMini_lib.xml	悟空机器人	悟空机器人是一款由优必选联合腾讯叮当共同研发的便携式智能机器人，可应用于家庭、社交、教育、办公等多个场景。
+USB_microbit_lib.xml	USB micro:bit	使用 USB 数据线连接电脑和 micro:bit 主板可以获得更稳定的数据传输。（micro:bit 需要先烧录 USB 通信固件）。
+
