@@ -1,11 +1,6 @@
-SnapExtensions.primitives.set("eim_log(data)", function (data) {
-  console.log(data); // for debug
-});
+// todo，合并命令，使其灵活，易于扩展和更新，使用list 风格，command name + options
 
-SnapExtensions.primitives.set("eim_openurl(url)", function (data) {
-  window.open(data);
-});
-
+// getter
 SnapExtensions.primitives.set("eim_token", function () {
   if (!window.eim_client) return "";
   return eim_client.adapter_base_client.token;
@@ -16,9 +11,54 @@ SnapExtensions.primitives.set("eim_running?", function () {
   return eim_client.adapter_base_client.connected;
 });
 
+SnapExtensions.primitives.set("eim_extstate", function (ext_name) {
+  return JSON.stringify(eim_client.exts_statu); 
+});
+
+SnapExtensions.primitives.set("eim_nodesstate", function (ext_name) {
+  return JSON.stringify(eim_client.nodes_statu);
+});
+
+SnapExtensions.primitives.set("eim_pluginmsgs", function () {
+  return JSON.stringify(eim_client.pluginMessages);
+});
+
+/*
+SnapExtensions.primitives.set("eim_pluginntfys", function () {
+  if (!eim_client.pluginNotify){
+    return JSON.stringify({})
+  }
+  else{
+    return JSON.stringify(eim_client.pluginNotify); // json string
+  }
+});
+
+
+SnapExtensions.primitives.set("eim_deviceconnected", function () {
+  if (!eim_client.deviceconnected){
+    return JSON.stringify({})
+  }
+  else{
+    return JSON.stringify(eim_client.deviceconnected); // json string
+  }
+});
+*/
+
+// setter
+SnapExtensions.primitives.set("eim_log(data)", function (data) {
+  console.log(data); // for debug
+});
+
+SnapExtensions.primitives.set("eim_openurl(url)", function (data) {
+  window.open(data);
+});
+
 SnapExtensions.primitives.set("eim_timeout(timeout)", function (timeout) {
   eim_client.emit_timeout = timeout * 1000;
 });
+
+// 前三个 eim_helper()
+
 
 SnapExtensions.primitives.set(
   "eim_controlext(content, ext)",
@@ -62,47 +102,22 @@ SnapExtensions.primitives.set(
   }
 );
 
-SnapExtensions.primitives.set("eim_extstate", function (ext_name) {
-  return JSON.stringify(eim_client.exts_statu); 
-});
-
-SnapExtensions.primitives.set("eim_nodesstate", function (ext_name) {
-  return JSON.stringify(eim_client.nodes_statu);
-});
-
-SnapExtensions.primitives.set("eim_pluginmsgs", function () {
-  if (!eim_client.pluginMessages){
-    return JSON.stringify({})
-  }
-  else{
-    return JSON.stringify(eim_client.pluginMessages); // json string
-  }
-});
-
-SnapExtensions.primitives.set("eim_pluginntfys", function () {
-  if (!eim_client.pluginNotify){
-    return JSON.stringify({})
-  }
-  else{
-    return JSON.stringify(eim_client.pluginNotify); // json string
-  }
-});
-
-
 
 SnapExtensions.primitives.set(
   "eim_broadcast(node_id, content)",
   function (node_id, content) {
-    const NODE_ID = "eim";
+    // const NODE_ID = "eim";
     eim_client.adapter_base_client.emit_without_messageid(node_id, content);
   }
 );
 
 SnapExtensions.primitives.set(
-  "eim_broadcastwait(node_id, content)",
-  function (node_id, content, proc) {
-    const NODE_ID = "eim";
-    let promise = eim_client.emit_with_messageid(node_id, content);
+  "eim_broadcastwait(node_id, content, timeout)",
+  function (node_id, content, timeout, proc) {
+    // const NODE_ID = "eim";
+    const timeout_ = timeout ? timeout * 1000 : eim_client.emit_timeout;
+    // console.log(timeout_);
+    let promise = eim_client.adapter_base_client.emit_with_messageid(node_id, content, timeout_); // timeout
     const promiseId = Math.floor(Math.random() * 1000000000);
     promise.then((value) => {
       try {
@@ -112,9 +127,18 @@ SnapExtensions.primitives.set(
         console.error(e);
       }
     });
+    promise.catch((e) => {
+      try {
+        proc.doSetVar("isDone", true);
+        proc.doSetVar("reply", e);
+      } catch (err) {
+        console.error(err);
+      }
+    });
   }
 );
 
+// helper
 // send image to adapter
 SnapExtensions.primitives.set(
   "eim_costume2base64(cst, name)",
@@ -187,3 +211,29 @@ SnapExtensions.primitives.set(
     };
   }
 );
+
+// mqt_connect(broker,callback,options)
+// 想要 这样的结构，能够在 Snap 中处理外部系统的事件
+// 在系统内接收事件？ broadcast
+// on_msg(notify/plugin,callback)
+
+SnapExtensions.primitives.set("eim_notify(node_id, callback)", 
+  function (node_id, callback) {
+    // todo 减少 EIM primitive 数量
+    eim_client._notify_callbacks[node_id] = (msg) => {
+      console.log('eim_notify', msg);
+      let p = new Process();
+      try {
+				p.initializeFor(callback, new List([JSON.stringify(msg)]));
+			} catch(e) {
+				p.initializeFor(callback, new List([]));
+			}
+      let stage =  this.parentThatIsA(StageMorph);
+			stage.threads.processes.push(p);
+  }
+});
+
+// onAdapterPluginMessage, onpluginmsg(node_id, callback)
+// eim_client._onPluginMsg_callbacks
+// scratch overdrive: msg.message.payload.message_type === 'devices_list' 
+// 不要修改核心的东西, diff eim插件和当前库，避免太多侵入修改

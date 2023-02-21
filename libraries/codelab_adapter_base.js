@@ -337,7 +337,7 @@ class AdapterBaseClient {
                     // reject(`reject: timeout(${timeout/1000}s)`); // reject 积木将中止
                     // todo 通知, 积木名字
                     // todo: https://github.com/LLK/scratch-vm/blob/acc2e6dba2e5a32668f0b26f0b2c4dfdecbe1023/src/util/jsonrpc.js#L91
-                    this.runtime.emit('PUSH_NOTIFICATION', {content: `timeout(${timeout/1000}s)`, type: 'error'})
+                    if (this.runtime) this.runtime.emit('PUSH_NOTIFICATION', {content: `timeout(${timeout/1000}s)`, type: 'error'});
                 }
                 
             }, timeout);
@@ -367,7 +367,7 @@ class AdapterBaseClient {
                 // util.stopAll();
                 try{
                     console.debug(`PUSH_NOTIFICATION`);
-                    this.runtime.emit('PUSH_NOTIFICATION', {content: `rate limit (${this.SendRateMax})`, type: 'error'})
+                    if (this.runtime) this.runtime.emit('PUSH_NOTIFICATION', {content: `rate limit (${this.SendRateMax})`, type: 'error'});
                     // todo 灾难不要发生在全局，只是弹出提醒
                     // this.runtime.stopAll(); 弹出消息更细致 包括积木名字
                 }
