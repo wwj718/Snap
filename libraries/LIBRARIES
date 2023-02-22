@@ -54,4 +54,4 @@ Kano_Wand.xml	Kano Wand	魔杖内置高精度运动传感器，此扩展让你�
 AlphaMini_lib.xml	悟空机器人	悟空机器人是一款由优必选联合腾讯叮当共同研发的便携式智能机器人，可应用于家庭、社交、教育、办公等多个场景。
 USB_microbit_lib.xml	USB micro:bit	使用 USB 数据线连接电脑和 micro:bit 主板可以获得更稳定的数据传输。（micro:bit 需要先烧录 USB 通信固件）。
 RoboMasterEP_lib.xml	RoboMaster EP	机甲大师 EP 是大疆面向教育场景打造的四轮机器人，此扩展可以让你控制与电脑连接在同一局域网内的机甲大师 EP。
-
+DymamicTable_lib.xml	Dynamic Table 2.0	通过摄像头对二维码等特定标记的识别实现对物理世界中各类实物的编程。

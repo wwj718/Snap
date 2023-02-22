@@ -32,7 +32,7 @@ class EIMClient {
     }
 
     notify_callback(msg){
-        // 接受硬件设备的信息, 断开...
+        // 接收硬件设备的信息, 断开...
         // 逐一调用
         for (const node_id in this._notify_callbacks){
             if (msg.message.includes(node_id) || (node_id.includes('microbit') && msg.message.includes("micro:bit"))){
@@ -51,32 +51,8 @@ class EIMClient {
         if (msg.message === `${this.NODE_ID} 已断开`) {
             this.ScratchUIHelper.reset();
         }
+        // micro:bit 连接异常
          */
-
-
-        /*
-        let timestamp = Date.now();
-        let node_id;
-        console.log('notify_callback ->', msg);
-        if (msg.message.includes('停止')){
-            node_id = msg.message.split(' ')[1]
-            // NTFY
-            this.pluginNotify[node_id] = {"timestamp":timestamp, "message": msg.message}
-            // connect 连接成功应该要重置 deviceconnected
-            // 回调，在snap里，类似 callback
-            // this.deviceconnected[node_id] = false;
-        }
-        if (msg.message.includes('已断开')){
-            node_id = msg.message.split(' ')[0]
-            // NTFY
-            this.pluginNotify[node_id] = {"timestamp":timestamp, "message": msg.message}
-            // this.deviceconnected[node_id] = false;
-        }
-        if (msg.message === `micro:bit 连接异常`) {
-            this.pluginNotify['eim/extension_usb_microbit'] = {"timestamp":timestamp, "message": msg.message}
-            // this.deviceconnected[node_id] = false;
-        }
-        */
     }
 
     constructor (node_id, help_url, runtime) {
@@ -110,8 +86,6 @@ class EIMClient {
         this.adapter_node_content_reporter = 0;
         this.node_id = 0;
         this.pluginMessages = {}; // 所有插件的消息池，不需要每个插件建立一个websocket， 每条消息附着时间
-        // this.pluginNotify = {};
-        // this.deviceconnected = {};
     }
 
     emit_with_messageid (NODE_ID, content) {
