@@ -118,6 +118,8 @@ function (fname, args, proc) {
   proc.assertType(args, 'list');
   data = args.itemsArray();
   // console.log(data);
+  // set token
+  if (fname == 'settoken') eim_client.adapter_base_client.token = data[0];
   if (fname == 'log') console.log(data);
   if (fname == 'openurl') window.open(data[0]);
   if (fname == 'createobj') {return {[data[0]]: data[1]}};
