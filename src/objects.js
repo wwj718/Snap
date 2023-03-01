@@ -2891,7 +2891,9 @@ SpriteMorph.prototype.blockTemplates = function (
             blocks.push(block('reportTypeOf'));
             blocks.push(block('reportTextFunction'));
         }
-
+    
+//    } else if (category === 'USB micro:bit'){
+//        blocks.push(this.makeVariableButton());
     } else if (category === 'variables') {
 
         blocks.push(this.makeVariableButton());
@@ -3279,6 +3281,26 @@ SpriteMorph.prototype.freshPalette = function (category) {
         makeButton.fixLayout();
         palette.toolBar.add(makeButton);
     }
+    
+    /*
+    if (ide?.currentCategory == 'USB micro:bit'){
+        connectButton = new PushButtonMorph(
+            this,
+            ()=>{console.log('USB micro:bit connect...'); ide.userSetStageSize()}, 
+            '🔗'
+        );
+        connectButton.alpha = 0.8;
+        connectButton.color = new Color(244,164,96);
+        connectButton.padding = 1;
+        connectButton.hint = localize('Connect a device') + '...';
+        connectButton.labelShadowColor = shade;
+        connectButton.edge = 0;
+        connectButton.padding = 3;
+        connectButton.fixLayout();
+        palette.toolBar.add(connectButton);
+    }
+    */
+    
 
     palette.toolBar.fixLayout();
     palette.add(palette.toolBar);
