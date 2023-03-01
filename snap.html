@@ -68,7 +68,9 @@
 
                 // if (config.load) -> onload() , microworld file name (xml)
                 // const config = {onload:	(x)=>{console.log('onload')}, noSprites: true};
-                new IDE_Morph().openIn(world);
+                const config = {noCloud: true}
+                // cloud.disabled
+                window.ide = new IDE_Morph(config).openIn(world);
                 requestAnimationFrame(loop);
 
                 const connect_adapter = ()=>{
