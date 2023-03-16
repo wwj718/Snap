@@ -56,3 +56,4 @@ USB_microbit_lib.xml	USB micro:bit	使用 USB 数据线连接电脑和 micro:bit
 RoboMasterEP_lib.xml	RoboMaster EP	机甲大师 EP 是大疆面向教育场景打造的四轮机器人，此扩展可以让你控制与电脑连接在同一局域网内的机甲大师 EP。
 DymamicTable_lib.xml	Dynamic Table 2.0	通过摄像头对二维码等特定标记的识别实现对物理世界中各类实物的编程。
 python_function_lib.xml	Python function	类似 Snap! 内置的 JavaScript function，将 Liveness 赋予给 Python
+dotPack_lib.xml	dotPack(USB)	可编程书包
