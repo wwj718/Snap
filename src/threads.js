@@ -65,7 +65,7 @@ StagePickerMorph, CustomBlockDefinition*/
 
 /*jshint esversion: 11, bitwise: false, evil: true*/
 
-modules.threads = '2023-February-04';
+modules.threads = '2023-March-21';
 
 var ThreadManager;
 var Process;
@@ -788,7 +788,7 @@ Process.prototype.evaluateContext = function () {
     if (exp instanceof ArgLabelMorph) {
         return this.evaluateArgLabel(exp);
     }
-    if (exp instanceof ArgMorph || exp.bindingID) {
+    if (exp instanceof ArgMorph || (exp && exp.bindingID)) {
         return this.evaluateInput(exp);
     }
     if (exp instanceof BlockMorph) {
@@ -808,8 +808,8 @@ Process.prototype.evaluateBlock = function (block, argCount) {
     	selector = block.selector;
 
     // check for special forms
-    if (selector === 'reportOr' ||
-            selector ===  'reportAnd' ||
+    if (selector === 'reportVariadicOr' ||
+            selector ===  'reportVariadicAnd' ||
             selector === 'reportIfElse' ||
             selector === 'doReport') {
         if (this.isCatchingErrors) {
@@ -862,7 +862,9 @@ Process.prototype.doApplyExtension = function (prim, args) {
 Process.prototype.reportApplyExtension = function (prim, args) {
     var ext = SnapExtensions.primitives.get(prim);
     if (isNil(ext)) {
-        throw new Error(localize('missing / unspecified extension') + ': ' + prim);
+        throw new Error(
+            localize('missing / unspecified extension') + ': ' + prim
+        );
     }
     return ext.apply(
         this.blockReceiver(),
@@ -872,58 +874,92 @@ Process.prototype.reportApplyExtension = function (prim, args) {
 
 // Process: Special Forms Blocks Primitives
 
-Process.prototype.reportOr = function (block) {
-    var inputs = this.context.inputs;
+Process.prototype.reportVariadicOr = function (block) {
+    this.reportAssociativeBool(
+        block,
+        this.reportBasicOr, // base op
+        true // short-circuit return value
+    );
+};
 
+Process.prototype.reportVariadicAnd = function (block) {
+    this.reportAssociativeBool(
+        block,
+        this.reportBasicAnd, // base op
+        false // short-circuit return value
+    );
+};
+
+Process.prototype.reportAssociativeBool = function (block, baseOp, short) {
+    // private - evaluate special form variadic associative Boolean operations
+    // such as AND, OR
+    // baseOp - dyadic base operation (AND, OR)
+    // short - value at which to immediately return (short circuit)
+    var inputs = this.context.inputs,
+        tests = block.inputs()[0],
+        inline = tests instanceof MultiArgMorph,
+        outer = this.context.outerContext,
+        acc = this.context.accumulator,
+        check = slot => {
+            if (slot instanceof List || typeof slot === 'boolean') {
+                inputs.push(slot);
+            } else {
+                this.pushContext();
+                this.evaluate(slot);
+            }
+        };
     if (inputs.length < 1) {
-        this.evaluateNextInput(block);
+        if (inline) {
+            acc = this.context.accumulator = {
+                slots: tests.inputs(),
+                len: tests.inputs().length,
+                pc: 1
+            };
+            this.pushContext(acc.slots[0], outer);
+        } else { // tests is an ArgLabelMorph
+            this.pushContext(tests.argMorph(), outer);
+        }
     } else if (inputs.length === 1) {
-        // this.assertType(inputs[0], 'Boolean');
-        if (inputs[0] === true) {
-            if (this.flashContext()) {return; }
-            this.returnValueToParentContext(true);
-            this.popContext();
-        } else {
-            this.evaluateNextInput(block);
+        if (acc) { // inline - acc has been initialized
+            if (inputs[0] === short) {
+                if (this.flashContext()) {return; }
+                this.returnValueToParentContext(short);
+                this.popContext();
+            } else if (acc.pc >= acc.len) {
+                if (this.flashContext()) {return; }
+                this.returnValueToParentContext(
+                    inputs[0] === null ? !short : inputs[0]
+                );
+                this.popContext();
+            } else {
+                if (inline) {
+                    this.pushContext(acc.slots[acc.pc], outer);
+                } else {
+                    check(acc.slots[acc.pc]);
+                }
+            }
+        } else { // "with input list" variant
+            this.context.accumulator = {
+                slots: inputs[0].itemsArray(),
+                len: inputs[0].length(),
+                pc: 1
+            };
+            inputs.pop();
+            check(this.context.accumulator.slots[0]);
         }
     } else {
-        // this.assertType(inputs[1], 'Boolean');
         if (this.flashContext()) {return; }
-        // this.returnValueToParentContext(inputs[1] === true);
-        this.returnValueToParentContext(
-            this.hyper(this.reportBasicOr, inputs[0], inputs[1])
-        );
-        this.popContext();
+        inputs.push(this.hyper(
+            baseOp,
+            inputs.pop(),
+            inputs.pop()
+        ));
+        acc.pc += 1;
     }
 };
 
 Process.prototype.reportBasicOr = function (a, b) {
     return a || b;
-};
-
-Process.prototype.reportAnd = function (block) {
-    var inputs = this.context.inputs;
-
-    if (inputs.length < 1) {
-        this.evaluateNextInput(block);
-    } else if (inputs.length === 1) {
-        // this.assertType(inputs[0], 'Boolean');
-        if (!inputs[0]) {
-            if (this.flashContext()) {return; }
-            this.returnValueToParentContext(false);
-            this.popContext();
-        } else {
-            this.evaluateNextInput(block);
-        }
-    } else {
-        // this.assertType(inputs[1], 'Boolean');
-        if (this.flashContext()) {return; }
-        // this.returnValueToParentContext(inputs[1] === true);
-        this.returnValueToParentContext(
-            this.hyper(this.reportBasicAnd, inputs[0], inputs[1])
-        );
-        this.popContext();
-    }
 };
 
 Process.prototype.reportBasicAnd = function (a, b) {
@@ -1114,7 +1150,7 @@ Process.prototype.evaluateNextInputSet = function (element) {
     // the idea behind this optimization is to keep evaluating the inputs
     // while we know for sure that we aren't going to yield anyway
     var args = element.inputs(),
-        sel = this.context.expression.selector,
+        sel = this.context.expression?.selector,
         outer = this.context.outerContext, // for tail call elimination
         exp, ans;
 
@@ -1328,8 +1364,8 @@ Process.prototype.doRun = function (context, args) {
 
 Process.prototype.evaluate = function (
     context,
-    args,
-    isCommand
+    args = new List(),
+    isCommand = false
 ) {
     if (!context) {
         return this.returnValueToParentContext(null);
@@ -1349,6 +1385,8 @@ Process.prototype.evaluate = function (
 
     var outer = new Context(null, null, context.outerContext),
         caller = this.context.parentContext,
+        calr = copy(this.context),
+        self,
         exit,
         runnable,
         expr,
@@ -1380,7 +1418,12 @@ Process.prototype.evaluate = function (
     outer.variables.addVar(Symbol.for('arguments'), args);
 
     // assign a self-reference for introspection and recursion
-    outer.variables.addVar(Symbol.for('self'), context);
+    self = copy(context);
+    self.outerContext = outer;
+    outer.variables.addVar(Symbol.for('self'), self);
+
+    // capture the dynamic scope in "this caller"
+    outer.variables.addVar(Symbol.for('caller'), calr);
 
     // assign arguments that are actually passed
     if (parms.length > 0) {
@@ -1536,7 +1579,14 @@ Process.prototype.initializeFor = function (context, args) {
 
 // Process introspection
 
-Process.prototype.reportThisContext = function () {
+Process.prototype.reportEnvironment = function (choice) {
+    if (this.inputOption(choice) === 'caller') {
+        return this.reportCaller();
+    }
+    return this.reportSelf();
+};
+
+Process.prototype.reportSelf = function () {
     var sym = Symbol.for('self'),
         frame = this.context.variables.silentFind(sym),
         ctx;
@@ -1549,6 +1599,19 @@ Process.prototype.reportThisContext = function () {
         ctx.variables.parentFrame = ctx.outerContext.variables;
     }
     return ctx;
+};
+
+Process.prototype.reportCaller = function () {
+    var sym = Symbol.for('caller'),
+        frame = this.context.variables.silentFind(sym),
+        ctx;
+    if (frame) {
+        ctx = frame.vars[sym].value;
+        ctx.expression = ctx.expression?.topBlock().fullCopy();
+        ctx.inputs = [];
+        return ctx;
+    }
+    return this.blockReceiver();
 };
 
 // Process stopping blocks primitives
@@ -1620,6 +1683,7 @@ Process.prototype.runContinuation = function (aContext, args) {
 
 Process.prototype.evaluateCustomBlock = function () {
     var caller = this.context.parentContext,
+        calr = copy(this.context),
         block = this.context.expression,
         method = block.isGlobal ? block.definition
                 : this.blockReceiver().getMethod(block.semanticSpec),
@@ -1726,6 +1790,7 @@ Process.prototype.evaluateCustomBlock = function () {
         }
     }
     outer.variables.addVar(Symbol.for('self'), self);
+    outer.variables.addVar(Symbol.for('caller'), calr);
     runnable.expression = runnable.expression.blockSequence();
 };
 
@@ -2004,7 +2069,7 @@ Process.prototype.doInsertInList = function (element, index, list) {
         return null;
     }
     if (index instanceof Array) {
-        if (index[0] === 'any') {
+        if (index[0] === 'random') {
             idx = this.reportBasicRandom(1, list.length() + 1);
         } else if (index[0] === 'last') {
             idx = list.length() + 1;
@@ -2029,7 +2094,7 @@ Process.prototype.doReplaceInList = function (index, list, element) {
         return null;
     }
     if (index instanceof Array) {
-        if (index[0] === 'any') {
+        if (index[0] === 'random') {
             idx = this.reportBasicRandom(1, list.length() + 1);
         } else if (index[0] === 'last') {
             idx = list.length();
@@ -2065,7 +2130,7 @@ Process.prototype.reportListItem = function (index, list) {
         return '';
     }
     if (index instanceof Array) {
-        if (index[0] === 'any') {
+        if (index[0] === 'random') {
             return list.at(this.reportBasicRandom(1, list.length()));
         }
         if (index[0] === 'last') {
@@ -2131,6 +2196,9 @@ Process.prototype.reportListAttribute = function (choice, list) {
     case 'transpose':
         this.assertType(list, 'list');
         return list.transpose();
+    case 'distribution':
+        this.assertType(list, 'list');
+        return list.distribution();
     case 'reverse':
         this.assertType(list, 'list');
         return list.reversed();
@@ -3316,7 +3384,10 @@ Process.prototype.doPlaySoundUntilDone = function (name) {
     }
     if (name === null || this.context.activeAudio.ended
             || this.context.activeAudio.terminated) {
-        if (this.context.activeAudio) {
+        if (this.context.activeAudio && this.context.activeAudio.remove) {
+            this.context.activeAudio.currentSrc = null;
+            this.context.activeAudio.src = "";
+            this.context.activeAudio.srcObject = null;
             this.context.activeAudio.remove();
         }
         return null;
@@ -3332,6 +3403,9 @@ Process.prototype.doStopAllSounds = function () {
             if (thread.context) {
                 thread.context.stopMusic();
                 if (thread.context.activeAudio) {
+                    thread.context.activeAudio.currentSrc = null;
+                    thread.context.activeAudio.src = "";
+                    thread.context.activeAudio.srcObject = null;
                     thread.context.activeAudio.remove();
                     thread.popContext();
                 }
@@ -4288,6 +4362,82 @@ Process.prototype.reportBasicMax = function (a, b) {
     return x > y ? x : y;
 };
 
+// Process logic primitives - hyper-variadic applicative order
+
+Process.prototype.reportVariadicLessThan = function (items) {
+    return this.reportSequentialComparison(
+        (a, b) => this.reportLessThan(a, b),
+        items
+    );
+};
+
+Process.prototype.reportVariadicGreaterThan = function (items) {
+    return this.reportSequentialComparison(
+        (a, b) => this.reportGreaterThan(a, b),
+        items
+    );
+};
+
+Process.prototype.reportVariadicLessThanOrEquals = function (items) {
+    return this.reportSequentialComparison(
+        (a, b) => this.reportLessThanOrEquals(a, b),
+        items
+    );
+};
+
+Process.prototype.reportVariadicGreaterThanOrEquals = function (items) {
+    return this.reportSequentialComparison(
+        (a, b) => this.reportGreaterThanOrEquals(a, b),
+        items
+    );
+};
+
+Process.prototype.reportVariadicEquals = function (items) {
+    return this.reportSequentialComparison(
+        (a, b) => this.reportEquals(a, b),
+        items,
+        true // not hyper
+    );
+};
+
+Process.prototype.reportVariadicNotEquals = function (items) {
+    return this.reportSequentialComparison(
+        (a, b) => this.reportNotEquals(a, b),
+        items,
+        true // not hyper
+    );
+};
+
+Process.prototype.reportVariadicIsIdentical = function (items) {
+    return this.reportSequentialComparison(
+        (a, b) => this.reportIsIdentical(a, b),
+        items,
+        true // not hyper
+    );
+};
+
+Process.prototype.reportSequentialComparison = function (op, items, notHyper) {
+    // private - apply a comparison op to a sequence of values
+    var len = items.length(),
+        step, result, i;
+    if (len < 2) {return true; }
+    for (i = 1; i < len; i += 1) {
+        step = op(items.at(i), items.at(i + 1));
+        if (isNil(result)) {
+            result = step;
+        } else if (notHyper) {
+            result = result && step;
+        } else {
+            result = this.hyper(
+                (a, b) => a && b,
+                result,
+                step
+            );
+        }
+    }
+    return result;
+};
+
 // Process logic primitives - hyper where applicable
 
 Process.prototype.reportLessThan = function (a, b) {
@@ -4553,7 +4703,7 @@ Process.prototype.reportBasicLetter = function (idx, string) {
     var str, i;
 
     str = isNil(string) ? '' : string.toString();
-    if (this.inputOption(idx) === 'any') {
+    if (this.inputOption(idx) === 'random') {
         idx = this.reportBasicRandom(1, str.length);
     }
     if (this.inputOption(idx) === 'last') {
@@ -4565,7 +4715,11 @@ Process.prototype.reportBasicLetter = function (idx, string) {
 
 Process.prototype.reportStringSize = function (data) {
     return this.hyper(
-        str => isNil(data) ? 0 : Array.from(str.toString()).length,
+        str => isString(str) ? str.length
+                : (parseFloat(str) === +str ? str.toString().length : 0),
+        // proposed scheme by Michael to address text with emojis, has
+        // memory issue when the stringd get very large:
+        // str => isNil(data) ? 0 : Array.from(str.toString()).length,
         data
     );
 };
@@ -4580,7 +4734,8 @@ Process.prototype.reportUnicode = function (string) {
             return string.map(each => this.reportUnicode(each));
         }
         str = isNil(string) ? '\u0000' : string.toString();
-        unicodeList = Array.from(str);
+        // unicodeList = Array.from(str); // emoji-friendly version
+        unicodeList = str.split('');
         if (unicodeList.length > 1) {
             return this.reportUnicode(new List(unicodeList));
         }
@@ -4660,7 +4815,8 @@ Process.prototype.reportBasicTextSplit = function (string, delimiter) {
         break;
     case '':
     case 'letter':
-        return new List(Array.from(str));
+        // return new List(Array.from(str)); // proposed by Michael for emojis
+        return new List(str.split(''));
     case 'csv':
         return this.parseCSV(string);
     case 'json':
@@ -7377,7 +7533,7 @@ Process.prototype.doDefineBlock = function (upvar, label, context) {
     this.assertType(context, ['command', 'reporter', 'predicate']);
 
     // replace upvar self references inside the definition body
-    // with "reportThisContext" reporters
+    // with "reportEnvironment" reporters
     if (context.expression instanceof BlockMorph) {
         this.compileBlockReferences(context, upvar);
     }
@@ -7440,8 +7596,8 @@ Process.prototype.doDefineBlock = function (upvar, label, context) {
 
 Process.prototype.compileBlockReferences = function (context, varName) {
     // private - replace self references inside the definition body
-    // with "reportThisContext" reporters
-    var report, declare, assign;
+    // with "this script" reporters
+    var report, declare, assign, self;
 
     function block(selector) {
         return SpriteMorph.prototype.blockForSelector(selector);
@@ -7461,14 +7617,13 @@ Process.prototype.compileBlockReferences = function (context, varName) {
         }
         // add a script var to capture the outer definition
         // don't replace any references, because they now should just work
+        self = block('reportEnvironment');
+        self.inputs()[0].setContents(['script']);
         declare = block('doDeclareVariables');
         declare.inputs()[0].setContents([varName]);
         assign = block('doSetVar');
         assign.inputs()[0].setContents(varName);
-        assign.replaceInput(
-            assign.inputs()[1],
-            block('reportThisContext')
-        );
+        assign.replaceInput(assign.inputs()[1], self);
         declare.nextBlock(assign);
         assign.nextBlock(context.expression.fullCopy());
         context.expression = declare;
@@ -7481,7 +7636,8 @@ Process.prototype.compileBlockReferences = function (context, varName) {
             if (morph.selector === 'reportGetVar' &&
                 (morph.blockSpec === varName))
             {
-                ref = block('reportThisContext');
+                ref = block('reportEnvironment');
+                ref.inputs()[0].setContents(['script']);
                 if (morph.parent instanceof SyntaxElementMorph) {
                     morph.parent.replaceInput(morph, ref);
                 } else {
@@ -8611,9 +8767,9 @@ JSCompiler.prototype.compileExpression = function (block) {
 
     // first check for special forms and infix operators
     switch (selector) {
-    case 'reportOr':
+    case 'reportVariadicOr':
         return this.compileInfix('||', inputs);
-    case 'reportAnd':
+    case 'reportVariadicAnd':
         return this.compileInfix('&&', inputs);
     case 'reportIfElse':
         return '(' +
@@ -8696,7 +8852,7 @@ JSCompiler.prototype.compileExpression = function (block) {
     case 'reportBoolean':
     case 'reportNewList':
         return this.compileInput(inputs[0]);
-    case 'reportThisContext':
+    case 'reportEnvironment':
         return 'func';
     default:
         target = this.process[selector] ? this.process

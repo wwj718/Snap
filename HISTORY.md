@@ -2,34 +2,279 @@
 
 ## in development:
 * **New Features:**
+    * "this script" reporter now has a dropdown menu offering 2 environments: "script" and "caller"
 * **Notable Changes:**
+    * improved browser resource management for graphics and sounds
+    * updated audio comp library with a faster (hyper) version of the "Hz for secs" reporter
+    * new "fade-in" block in the audio comp library that lets you reduce audible "clicks" in sounds computed from raw samples
 * **Notable Fixes:**
+    * fixed #3154 (let "this script" capture variables in rings)
 * **Documentation Updates:**
 * **Translation Updates:**
+
+### 2023-03-21
+* threads: optimized and simplified "this caller" infrastructure
+
+### 2023-03-20
+* threads: fixed #3154 (let "this script" capture variables in rings)
+* objects, threads: capture the dynamic scope in "this caller" (temporary & experimental)
+* blocks, objects, threads: collapsed "this script" and "this caller" into new "this (environment)" reporter
+* gui, store: pushed dev version to 8.3 
+
+### 2023-03-17
+* objects, guj: added "dynamic sprites rendering" hidden option setting for debugging purposes
+* audio comp library: new "fade-in" block that lets you reduce audible "clicks" in sounds computed from raw samples
+
+### 2023-03-16
+* objects: dynamically cache sprite image depending on graphic effects
+* morphic: fixed scale when grabbing uncached image morphs
+* objects, threads: fixed #3075 (except Chrome still sabotages sounds, browsers suck)
+* updated audio comp library with a faster (hyper) version of the "Hz for secs" reporter
+
+### 2023-03-15
+* objects: turned off image caching for sprites, experimental
+
+### 2023-03-14
+* new dev version
+
+## 8.2.3:
+* **Notable Fixes:**
+    * fixed blocks search for scenes, thanks, Peter, for the report!
+
+## 8.2.2:
+* **Notable Fixes:**
+    * fixed "letter random of text" selector
+    * fixed "insert thing at random of list" selector
+    * fixed "replace item random of list with thing" selector
+    * fixed #3193 (invoking the scenes menu inside a custom block editor)
+
+### 2023-03-13
+* prepared v8.2.2 release
+
+### 2023-03-10
+* new dev version
+* threads: fixed "letter random of text" selector
+* threads: fixed "insert thing at random of list" selector
+* threads: fixed "replace item random of list with thing" selector
+* blocks: fixed #3193 (invoking the scenes menu inside a custom block editor)
+
+## 8.2.1:
+* **Notable Fixes:**
+    * fixed #3190 - unable to search blocks in the stage
+    * fixed finding blocks by typing their infix or collapse variants (e.g. "and", "or", "sum", "product" etc.)
+    * fixed #3191 - keep certain warning dialogs open when switching scenes
+
+### 2023-03-05
+* new dev version
+* objects: fixed #3190 - unable to search blocks in the stage
+* objects: fixed finding blocks by typing their infix or collapse variants (e.g. "and", "or", "sum", "product" etc.)
+* gui, widgets, store: fixed #3191 - keep warning dialogs open when switching scenes
+* prepared v8.2.1 release
+
+## 8.2.0:
+* **New Features:**
+    * AND / OR are now variadic (and hyper!), thanks, Dan, for the suggestion
+    * all comparison operators are now variadic
+    * new  "distribution" selector in the list attribute reporter's dropdown menu
+* **Notable Changes:**
+    * removed variadic reporters library (because the primitives are now variadic)
+    * MQTT library update, thanks, Simon and Xavier
+* **Notable Fixes:**
+    * fixed "rename" and "rename all" for custom block formal parameters
+    * fixed accessing random list elements
+    * TuneScope hotfix, thanks, Harsh, Glen & team!
+    * fixed including hidden variables when exporting blocks
+    * fixed #3183 - determining the length of huge strings fails
+* **Translation Updates:**
+    * German
+    * Catalan, thanks, Joan!
+
+### 2023-03-01
+* prepared v8.2 release
+
+### 2023-02-28
+* Catalan translation update, thanks, Joan!
+* v8.2-rc2
+
+### 2023-02-27
+* adjusted Kannada translation for variadic comparison ops
+* adjusted Korean translation for variadic comparison ops
+* adjusted Malayalam translation for variadic comparison ops
+* adjusted Norwegian translation for variadic comparison ops
+* adjusted Polish translation for variadic comparison ops
+* adjusted Portuguese translation for variadic comparison ops
+* adjusted Romanian translation for variadic comparison ops
+* adjusted Russian translation for variadic comparison ops
+* adjusted Slovenian translation for variadic comparison ops
+* adjusted Slovakian translation for variadic comparison ops
+* adjusted Swedish translation for variadic comparison ops
+* adjusted Tamil translation for variadic comparison ops
+* adjusted Telagu translation for variadic comparison ops
+* adjusted Turkish translation for variadic comparison ops
+* adjusted Ukrainian translation for variadic comparison ops
+* adjusted Simplified Chinese translation for variadic comparison ops
+* adjusted Traditional Chinese translation for variadic comparison ops
+* adjusted Greek translation for variadic comparison ops
+* adjusted Dutch translation for variadic comparison ops
+* adjusted Catalan translation for variadic comparison ops
+* adjusted Brazilian Portuguese translation for variadic comparison ops
+* lists: tweaked distribution()
+* German translation update for list "distribution"
+* threads: tweaked "unicode of"
+* objects: changed 'When ... is edited' hat block label to lowercase
+* v8.2-rc1
+
+### 2023-02-26
+* threads: fixed #3183 - determining the length of huge strings fails
+* blocks, threads, lists: added "distribution" selector to list attribute reporter
+
+### 2023-02-21
+* blocks, objects, threads: made all comparison operators variadic
+* blocks: tweaked layout for variadic predicates
+* blocks, objects: changed "any !=" to "all pairs !=", thanks, Dan!
+* blocks: changed "all pairs !=" to "neighbors !=", thanks, Brian!
+* gui: fixed #3186 - include hidden variables when exporting blocks
+* German translation update
+* adjusted Bulgarian translation for variadic comparison ops
+* adjusted Bangla translation for variadic comparison ops
+* adjusted Valencian Catalan translation for variadic comparison ops
+* adjusted Czech translation for variadic comparison ops
+* adjusted Danish translation for variadic comparison ops
+* adjusted Esperanto translation for variadic comparison ops
+* adjusted Spanish translation for variadic comparison ops
+* adjusted Estonian translation for variadic comparison ops
+* adjusted Basque translation for variadic comparison ops
+* adjusted Finnish translation for variadic comparison ops
+* adjusted French translation for variadic comparison ops
+* adjusted Galician translation for variadic comparison ops
+* adjusted Hebrew translation for variadic comparison ops
+* adjusted Hindi translation for variadic comparison ops
+* adjusted Arabic translation for variadic comparison ops
+* adjusted Croation translation for variadic comparison ops
+* adjusted Hungarian translation for variadic comparison ops
+* adjusted Interlingua translation for variadic comparison ops
+* adjusted Indonesian translation for variadic comparison ops
+* adjusted Italian translation for variadic comparison ops
+* adjusted Japanese translation for variadic comparison ops
+* adjusted Japanese Hira translation for variadic comparison ops
+
+### 2023-02-20
+* TuneScope hotfix, thanks, Harsh & team!
+* threads: fixed accessing random list elements
+
+### 2023-02-17
+* MQTT library update, thanks Simon and Xavier!
+* removed variadic reporters library (because the primitives are now variadic)
+
+### 2023-02-16
+* adjusted Arabic translation for Boolean ops
+* adjusted Bulgarian translation for Boolean ops
+* blocks: fixed "rename all" for custom block formal parameters
+* blocks: fixed "rename" for custom block formal parameters
+* threads: refactored variadic AND, OR into generalized reportAssociativeBool()
+* adjusted Bangla translation for Boolean ops
+* adjusted Valencian Catalan translation for Boolean ops
+* adjusted Czech translation for Boolean ops
+* adjusted Danish translation for Boolean ops
+* adjusted Esperanto translation for Boolean ops
+* adjusted Spanish translation for Boolean ops
+* adjusted Estonian translation for Boolean ops
+* adjusted Basque translation for Boolean ops
+* adjusted Finnish translation for Boolean ops
+* adjusted French translation for Boolean ops
+* adjusted Galician translation for Boolean ops
+* adjusted Hebrew translation for Boolean ops
+* adjusted Hindi translation for Boolean ops
+* adjusted Croatian translation for Boolean ops
+* adjusted Hungarian translation for Boolean ops
+* adjusted Interlingua translation for Boolean ops
+* adjusted Indinesian translation for Boolean ops
+* adjusted Italian translation for Boolean ops
+* adjusted Japanese translation for Boolean ops
+* adjusted Japanese Hiragana translation for Boolean ops
+* adjusted Kannada translation for Boolean ops
+* adjusted Korean translation for Boolean ops
+* adjusted Malayalam translation for Boolean ops
+* adjusted Norwegian translation for Boolean ops
+* adjusted Polish translation for Boolean ops
+* adjusted Portuguese translation for Boolean ops
+* adjusted Romanian translation for Boolean ops
+* adjusted Russian translation for Boolean ops
+* adjusted Slovenian translation for Boolean ops
+* adjusted Slovakian translation for Boolean ops
+* adjusted Swedish translation for Boolean ops
+* adjusted Tamil translation for Boolean ops
+* adjusted Telagu translation for Boolean ops
+* adjusted Turkish translation for Boolean ops
+* adjusted Ukrainian translation for Boolean ops
+* adjusted Simplified Chinese translation for Boolean ops
+* adjusted Traditional Chinese translation for Boolean ops
+* adjusted Greek translation for Boolean ops
+* adjusted Dutch translation for Boolean ops
+* adjusted Catalan translation for Boolean ops
+* adjusted Brazilian Portuguese translation for Boolean ops
+* threads: accept Boolean values in "with input list" variant of variadic Boolean ops
+* threads: let associative Boolean ops handle empty input lists
+* threads: refactored evaluation to lazy initialize args
+* threads: fixed base cases for variadic associative Boolean ops 
+
+### 2023-02-15
+* pushed dev version to 8.2
+* blocks, objects, threads: made AND variadic
+* blocks, objects, threads: made OR variadic
+* adjusted English translation: removed "any" -> "random" rewording
+* blocks: renamed all 'any' selectors in dropdowns into 'random'
+* help: adjusted help screen file names for AND / OR
+* adjusted German translation for Boolean ops
+* blocks: added translation support for infix labels
+
+### 2023-02-13
+* new dev version
+
+## 8.1.6:
+* **Notable Fixes:**
+    * fixed playing back a list of samples "until done", thanks for the report, @mjguzdial!
+    * fixed messed up stage layout when switching back from presentation to edit mode on small displays, thanks for the report, Eckart!
+    * fixed scaling down large stage sizes in presentation mode on small screens
+* **Documentation Updates:**
+    * updated API documentation for onload() configuration callback option
+
+### 2023-02-10
+* gui: fixed scaling down large stage sizes in presentation mode on small screens
+* gui: prepared v8.1.6 patch
+
+### 2023-02-09
+* gui: fixed messed up stage layout when switching back from presentation to edit mode on small displays, thanks for the report, Eckart!
+
+### 2023-02-08
+* new dev version
+* gui: added onload() callback to configuration dictionary
+* updated API documentation for onload() configuration callback option
+* threads: fixed playing back a list of samples "until done", thanks for the report, @mjguzdial!
 
 ## 8.1.5:
 * **Notable Fixes:**
     * fixed a scope highlighting bug
 
 ### 2023-02-06
-    * blocks: fixed a scope highlighting bug
-    * gui: prepared v8.1.5 patch
+* blocks: fixed a scope highlighting bug
+* gui: prepared v8.1.5 patch
 
 ## 8.1.4:
 * **Notable Fixes:**
     * blocks: fixed setting a default value for Boolean input slots in custom blocks
 
 ### 2023-02-05
-    * blocks: fixed setting a default value for Boolean input slots in custom blocks
-    * gui: prepared v8.1.4 patch
+* blocks: fixed setting a default value for Boolean input slots in custom blocks
+* gui: prepared v8.1.4 patch
 
 ## 8.1.3:
 * **Notable Fixes:**
     * fixed jit-compiling dropdown choices (e.g. "item /last/ of list")
 
 ### 2023-02-04
-    * threads: fixed jit-compiling dropdown choices (e.g. "item /last/ of list")
-    * gui: prepared v8.1.3 patch
+* threads: fixed jit-compiling dropdown choices (e.g. "item /last/ of list")
+* gui: prepared v8.1.3 patch
 
 ## 8.1.2:
 * **Notable Fixes:**

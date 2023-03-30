@@ -161,7 +161,7 @@ SVG_Costume, embedMetadataPNG, ThreadManager*/
 
 // Global stuff ////////////////////////////////////////////////////////
 
-modules.blocks = '2023-February-06';
+modules.blocks = '2023-March-20';
 
 var SyntaxElementMorph;
 var BlockMorph;
@@ -470,7 +470,7 @@ SyntaxElementMorph.prototype.labelParts = {
         menu: {
             '1' : 1,
             last : ['last'],
-            any : ['any']
+            random : ['random']
         }
     },
     '%ix': {
@@ -479,7 +479,7 @@ SyntaxElementMorph.prototype.labelParts = {
         menu: {
             '1' : 1,
             last : ['last'],
-            any : ['any']
+            random : ['random']
         }
     },
     '%la': {
@@ -493,6 +493,7 @@ SyntaxElementMorph.prototype.labelParts = {
             'flatten' : ['flatten'],
             'columns' : ['columns'],
             // 'transpose' : ['transpose'],
+            'distribution' : ['distribution'],
             'reverse' : ['reverse'],
             '~' : null,
             'lines' : ['lines'],
@@ -549,7 +550,7 @@ SyntaxElementMorph.prototype.labelParts = {
         type: 'input',
         tags: 'read-only',
         menu: 'userEditMenu',
-        value: ['any']
+        value: ['anything']
     },
     '%col': { // collision detection
         type: 'input',
@@ -592,6 +593,14 @@ SyntaxElementMorph.prototype.labelParts = {
             // duplicate: ['duplicate'],
             // comic: ['comic'],
             // confetti: ['confetti']
+        }
+    },
+    '%env': {
+        type: 'input',
+        tags: 'read-only static',
+        menu: {
+            script: ['script'],
+            caller: ['caller']
         }
     },
     '%snd': {
@@ -1167,6 +1176,69 @@ SyntaxElementMorph.prototype.labelParts = {
         min: 2,
         infix: 'max',
         collapse: 'maximum'
+    },
+    '%all': {
+        type: 'multi',
+        slots: '%b',
+        min: 2,
+        infix: 'and',
+        collapse: 'all'
+    },
+    '%any': {
+        type: 'multi',
+        slots: '%b',
+        min: 2,
+        infix: 'or',
+        collapse: 'any'
+    },
+    '%all<': {
+        type: 'multi',
+        slots: '%s',
+        min: 2,
+        infix: '<',
+        collapse: 'all <'
+    },
+    '%all>': {
+        type: 'multi',
+        slots: '%s',
+        min: 2,
+        infix: '>',
+        collapse: 'all >'
+    },
+    '%all<=': {
+        type: 'multi',
+        slots: '%s',
+        min: 2,
+        infix: '\u2264',
+        collapse: 'all \u2264'
+    },
+    '%all>=': {
+        type: 'multi',
+        slots: '%s',
+        min: 2,
+        infix: '\u2265',
+        collapse: 'all \u2265'
+    },
+    '%all=': {
+        type: 'multi',
+        slots: '%s',
+        min: 2,
+        infix: '=',
+        collapse: 'all ='
+    },
+    '%all!=': {
+        type: 'multi',
+        slots: '%s',
+        min: 2,
+        infix: '\u2260',
+        collapse: 'neighbors \u2260'
+    },
+    '%all==': {
+        type: 'multi',
+        slots: '%s',
+        min: 2,
+        infix: 'identical to',
+        collapse: 'all identical'
     }
 };
 
@@ -1931,6 +2003,7 @@ SyntaxElementMorph.prototype.fixLayout = function () {
         ico = this instanceof BlockMorph && this.hasLocationPin() ?
         	this.methodIconExtent().x + space : 0,
         bottomCorrection,
+        rightCorrection = 0,
         rightMost,
         hasLoopCSlot = false,
         hasLoopArrow = false;
@@ -2103,6 +2176,7 @@ SyntaxElementMorph.prototype.fixLayout = function () {
             blockWidth,
             maxX - this.left() + this.rounding
         );
+        rightCorrection = space;
     } else if ((this instanceof MultiArgMorph && this.slotSpec !== '%cs')
             || this instanceof ArgLabelMorph) {
         blockWidth = Math.max(
@@ -2114,16 +2188,19 @@ SyntaxElementMorph.prototype.fixLayout = function () {
             blockWidth,
             maxX - this.left() + this.labelPadding - this.edge
         );
-        // adjust right padding if rightmost input has arrows
-        rightMost = parts[parts.length - 1];
-        if (rightMost instanceof MultiArgMorph && rightMost.isVisible &&
-                (lines.length === 1)) {
-            blockWidth -= space;
-        }
-        // adjust width to hat width
-        if (this instanceof HatBlockMorph) {
-            blockWidth = Math.max(blockWidth, this.hatWidth * 1.5);
-        }
+        rightCorrection = space;
+    }
+
+    // adjust right padding if rightmost input has arrows
+    rightMost = parts[parts.length - 1];
+    if (rightMost instanceof MultiArgMorph && rightMost.isVisible &&
+            (lines.length === 1)) {
+        blockWidth -= rightCorrection;
+    }
+
+    // adjust width to hat width
+    if (this instanceof HatBlockMorph) {
+        blockWidth = Math.max(blockWidth, this.hatWidth * 1.5);
     }
 
     // set my extent (silently, because we'll redraw later anyway):
@@ -2700,7 +2777,7 @@ BlockSymbolMorph.prototype.getShadowRenderColor = function () {
     %dir    - white roundish type-in slot with drop-down for directions
     %inst   - white roundish type-in slot with drop-down for instruments
     %ida    - white roundish type-in slot with drop-down for list indices
-    %idx    - white roundish type-in slot for indices incl. "any"
+    %idx    - white roundish type-in slot for indices incl. "random"
     %dim    - white roundish type-in slot for dimensinos incl. "current"
     %obj    - specially drawn slot for object reporters
     %rel    - chameleon colored rectangular drop-down for relation options
@@ -3030,15 +3107,27 @@ BlockMorph.prototype.userMenu = function () {
     }
 
     function renameVar() {
-        var blck = myself.fullCopy();
+        var blck = myself.fullCopy(),
+            frag = myself.parent instanceof BlockInputFragmentMorph ?
+                myself.parent.fragment
+                : null;
         blck.addShadow();
+
         new DialogBoxMorph(
             myself,
-            myself.userSetSpec,
+            frag ?
+                newName => {
+                    myself.userSetSpec(newName);
+                    myself.instantiationSpec = newName;
+                    myself.parent.fragment.labelString = newName;
+                }
+                : myself.userSetSpec,
             myself
         ).prompt(
             "Variable name",
-            myself.blockSpec,
+            frag ?
+                frag.labelString
+                : myself.blockSpec,
             world,
             blck.doWithAlpha(1, () => blck.fullImage()), // pic
             InputSlotMorph.prototype.getVarNamesDict.call(myself)
@@ -4834,6 +4923,10 @@ BlockMorph.prototype.refactorInlineTemplate = function () {
         // rename the template
         myself.changed();
         myself.setSpec(newName);
+        myself.instantiationSpec = newName;
+        if (myself.parent instanceof BlockInputFragmentMorph) {
+            myself.parent.fragment.labelString = newName;
+        }
         myself.fixLabelColor();
         myself.changed();
         // rename the following blocks in the lexical scope
@@ -10395,6 +10488,10 @@ InputSlotMorph.prototype.setContents = function (data) {
 	}
 
     if (isConstant) {
+        // migrate old "any" constants
+        if (dta[0] === 'any') {
+            dta[0] = 'random';
+        }
         if (dta[0] === '__shout__go__') {
             this.symbol = this.labelPart('%greenflag');
             this.add(this.symbol);
@@ -11226,9 +11323,12 @@ InputSlotMorph.prototype.audioMenu = function (searching) {
 
 InputSlotMorph.prototype.scenesMenu = function (searching) {
     var dict = {},
-        scenes;
+        ide, scenes;
     if (!searching) {
-        scenes = this.parentThatIsA(IDE_Morph).scenes;
+        ide = this.parentThatIsA(IDE_Morph) ||
+            this.parentThatIsA(BlockEditorMorph)
+                .target.parentThatIsA(IDE_Morph);
+        scenes = ide.scenes;
         if (scenes.length() > 1) {
             scenes.itemsArray().forEach(scn => {
                 if (scn.name) {
@@ -11512,7 +11612,7 @@ InputSlotMorph.prototype.evaluate = function () {
     answer my contents, which can be a "wish", i.e. a block that refers to
     another sprite's local method, or a text string. If I am numerical convert
     that string to a number. If the conversion fails answer the string
-    (e.g. for special choices like 'any', 'all' or 'last') otherwise
+    (e.g. for special choices like 'random', 'all' or 'last') otherwise
     the numerical value.
 */
     var num, contents;
@@ -13394,7 +13494,7 @@ MultiArgMorph.prototype.insertNewInputBefore = function (anInput, contents) {
     }
     newPart.parent = this;
     if (this.infix !== '') {
-        infix = this.labelPart(this.infix);
+        infix = this.labelPart(localize(this.infix));
         infix.parent = this;
         this.children.splice(idx, 0, newPart, infix);
     } else {
@@ -13458,7 +13558,7 @@ MultiArgMorph.prototype.addInput = function (contents) {
 
 MultiArgMorph.prototype.addInfix = function () {
     var infix,
-        label = this.infix ? this.infix
+        label = this.infix ? localize(this.infix)
         : (this.labelText instanceof Array ?
             this.labelText[this.inputs().length]
             : '');

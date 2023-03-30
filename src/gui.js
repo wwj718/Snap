@@ -86,11 +86,11 @@ BlockVisibilityDialogMorph, ThreadManager, isString, SnapExtensions*/
 
 // Global stuff ////////////////////////////////////////////////////////
 
-modules.gui = '2022-February-06';
+modules.gui = '2023-March-20';
 
 // Declarations
 
-var SnapVersion = '8.1.5';
+var SnapVersion = '8.3.0-dev';
 
 var IDE_Morph;
 var ProjectDialogMorph;
@@ -237,6 +237,7 @@ function IDE_Morph(config = {}) {
         noAutoFill      bool, do not let the IDE fill the whole World canvas
         path            str, path to additional resources (translations)
         load:           str, microworld file name (xml)
+        onload:         callback, called when the microworld is loaded
         design:         str, currently "flat" (bright) or "classic" (dark)
         border:         num, pixels surrounding the IDE, default is none (zero)
         lang:           str, translation to be used, e.g. "de" for German
@@ -730,7 +731,7 @@ IDE_Morph.prototype.openIn = function (world) {
     // configure optional settings
     this.applyConfigurations();
 
-    this.warnAboutDev();
+    // this.warnAboutDev();
     return this;
 };
 
@@ -756,6 +757,9 @@ IDE_Morph.prototype.applyConfigurations = function () {
                         }
                         this.hasChangedMedia = true;
                         this.applyPaneHidingConfigurations();
+                        if (cnf.onload) {
+                            cnf.onload();
+                        }
                     }
                 );
             } else {
@@ -1136,6 +1140,47 @@ IDE_Morph.prototype.createControlBar = function () {
     steppingButton = button;
     this.controlBar.add(steppingButton);
     this.controlBar.steppingButton = steppingButton; // for refreshing
+    
+    // adapterButton
+    button = new PushButtonMorph(
+        this,
+        () => {console.log("adapterButton")},
+        new SymbolMorph('circleSolid', 14)
+        // '🔥'
+    );
+    button.corner = 12;
+    button.color = colors[0];
+    button.highlightColor = colors[1];
+    button.pressColor = colors[2];
+    button.labelMinExtent = new Point(36, 18);
+    button.padding = 0;
+    button.labelShadowOffset = new Point(-1, -1);
+    button.labelShadowColor = colors[1];
+    button.fps = 4;
+    button.isActive = false;
+
+    button.step = function () {
+        if (window.eim_client){
+            // 在全局环境中查询, 基于查询而不是回调
+            if (eim_client.adapter_base_client.connected){
+                this.labelColor = new Color(0, 200, 0);
+                this.hint = 'Adapter status: online';
+            }
+            else {
+                this.labelColor = new Color(128, 128, 128);
+                this.hint = 'Adapter status: offline';
+            }
+        }
+        // this.controlBar.adapterButton.createLabel();
+        this.fixLayout();
+        this.rerender();
+    };
+
+    button.contrast = this.buttonContrast;
+    button.fixLayout();
+    adapterButton = button;
+    this.controlBar.add(adapterButton);
+    this.controlBar.adapterButton = adapterButton; // for refreshing
 
     // stopButton
     button = new ToggleButtonMorph(
@@ -1255,6 +1300,7 @@ IDE_Morph.prototype.createControlBar = function () {
     startButton = button;
     this.controlBar.add(startButton);
     this.controlBar.startButton = startButton;
+    
 
     // steppingSlider
     slider = new SliderMorph(
@@ -1369,6 +1415,7 @@ IDE_Morph.prototype.createControlBar = function () {
                     (myself.isSmallStage ? myself.stageRatio : 1) -
                     (myself.config.border || 0)
             );
+            x = Math.max(x, this.left());
         }
         [stageSizeButton, appModeButton].forEach(button => {
                 x += padding;
@@ -1383,7 +1430,9 @@ IDE_Morph.prototype.createControlBar = function () {
 
         steppingButton.setCenter(myself.controlBar.center());
         steppingButton.setRight(slider.left() - padding);
-
+        // 左移
+        adapterButton.setCenter(myself.controlBar.center());
+        adapterButton.setRight(steppingButton.left() - padding);
         settingsButton.setCenter(myself.controlBar.center());
         settingsButton.setLeft(this.left());
 
@@ -2654,12 +2703,9 @@ IDE_Morph.prototype.setExtent = function (point) {
 
     // determine the minimum dimensions making sense for the current mode
     if (this.isAppMode) {
-        if (this.isEmbedMode) {
-            minExt = new Point(100, 100);
-        } else {
-            minExt = this.stage.dimensions.add(
-                this.controlBar.height() + 10
-            );
+        minExt = new Point(100, 100);
+        if (!this.isEmbedMode) {
+            minExt = minExt.add(this.controlBar.height() + 10);
         }
     } else if (cnf.noSprites) {
         minExt = new Point(100, 100);
@@ -2674,18 +2720,24 @@ IDE_Morph.prototype.setExtent = function (point) {
     }
     ext = point.max(minExt);
 
-    // adjust stage ratio if necessary
-    if (!cnf.noSprites) {
-        maxWidth = ext.x -
-            (200 + this.spriteBar.tabBar.width() + (this.padding * 2));
-        minWidth = SpriteIconMorph.prototype.thumbSize.x * 3;
-        maxHeight = (ext.y - SpriteIconMorph.prototype.thumbSize.y * 3.5);
-        minRatio = minWidth / this.stage.dimensions.x;
-        maxRatio = Math.min(
-            (maxWidth / this.stage.dimensions.x),
-            (maxHeight / this.stage.dimensions.y)
-        );
-        this.stageRatio = Math.min(maxRatio, Math.max(minRatio, this.stageRatio));
+    if (!this.isAppMode) {
+        // in edit mode adjust stage ratio if necessary
+        // (in presentation mode this is already handled separately)
+        if (!cnf.noSprites) {
+            maxWidth = ext.x -
+                (200 + this.spriteBar.tabBar.width() + (this.padding * 2));
+            minWidth = SpriteIconMorph.prototype.thumbSize.x * 3;
+            maxHeight = (ext.y - SpriteIconMorph.prototype.thumbSize.y * 3.5);
+            minRatio = minWidth / this.stage.dimensions.x;
+            maxRatio = Math.min(
+                (maxWidth / this.stage.dimensions.x),
+                (maxHeight / this.stage.dimensions.y)
+            );
+            this.stageRatio = Math.min(
+                maxRatio,
+                Math.max(minRatio,this.stageRatio)
+            );
+        }
     }
 
     // apply
@@ -4319,6 +4371,15 @@ IDE_Morph.prototype.settingsMenu = function () {
         CamSnapshotDialogMorph.prototype.enableCamera,
         'uncheck to disable\ncamera support',
         'check to enable\ncamera support',
+        true
+    );
+    addPreference(
+        'Dynamic sprite rendering',
+        () => SpriteMorph.prototype.isCachingImage =
+            !SpriteMorph.prototype.isCachingImage,
+        !SpriteMorph.prototype.isCachingImage,
+        'uncheck to render\nsprites dynamically',
+        'check to cache\nsprite renderings',
         true
     );
     menu.addLine(); // everything visible below is persistent
@@ -6452,7 +6513,9 @@ IDE_Morph.prototype.switchToScene = function (
     if (!scene || !scene.stage) {
         return;
     }
-    this.siblings().forEach(
+    this.siblings().filter(
+        morph => !morph.nag
+    ).forEach(
         morph => morph.destroy()
     );
     this.scene.captureGlobalSettings();
@@ -7953,10 +8016,10 @@ IDE_Morph.prototype.blocksLibraryXML = function (
         locals = definitions.filter(def => !def.isGlobal),
         glbStr = globals.length ? this.serializer.serialize(globals, true) : '',
         locStr = locals.length ? this.serializer.serialize(locals, true) : '',
-        dtaStr = dataFrame && dataFrame.names().length ?
+        dtaStr = dataFrame && dataFrame.names(true).length ?
             this.serializer.serialize(dataFrame, true)
             : '',
-        ldtStr = localData && localData.names().length ?
+        ldtStr = localData && localData.names(true).length ?
             this.serializer.serialize(localData, true)
             : '',
         cats = moreCategories || [],
@@ -8011,7 +8074,7 @@ IDE_Morph.prototype.showMessage = function (message, secs) {
 };
 
 IDE_Morph.prototype.inform = function (title, message) {
-    new DialogBoxMorph().inform(
+    return new DialogBoxMorph().inform(
         title,
         localize(message),
         this.world()
@@ -8063,6 +8126,7 @@ IDE_Morph.prototype.warnAboutIE = function () {
         dlg.addBody(txt);
         dlg.fixLayout();
         dlg.popUp(this.world());
+        dlg.nag = true;
     }
 };
 
@@ -8086,7 +8150,7 @@ IDE_Morph.prototype.warnAboutDev = function () {
             'even future official versions!\n\n' +
             'visit https://snap.berkeley.edu/run\n' +
             'for the official Snap! installation.'
-    );
+    ).nag = true;
 };
 
 // ProjectDialogMorph ////////////////////////////////////////////////////
