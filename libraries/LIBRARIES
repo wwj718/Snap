@@ -57,3 +57,4 @@ RoboMasterEP_lib.xml	RoboMaster EP	机甲大师 EP 是大疆面向教育场景�
 DymamicTable_lib.xml	Dynamic Table 2.0	通过摄像头对二维码等特定标记的识别实现对物理世界中各类实物的编程。
 python_function_lib.xml	Python function	类似 Snap! 内置的 JavaScript function，将 Liveness 赋予给 Python
 dotPack_lib.xml	dotPack(USB)	可编程书包
+Elite_Speechcx.xml	语音合成	AI 可以将你输入到计算机的文字朗读出来，并且允许你选择不同的嗓音，设置语速、音调等。
